@@ -1,0 +1,9 @@
+.env
+__pycache__/
+*.log
+*.pcap
+splunk-data/
+logs/
+node_modules/
+build/
+.DS_Store

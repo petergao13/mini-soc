@@ -1,0 +1,26 @@
+# currently a placeholder. Will be implemented fully
+# after the zeek -> splunk pipeline is finished. 
+
+
+# version: '3.8'
+
+# services:
+#   zeek:
+#     image: blacktop/zeek
+#     volumes:
+#       - ./zeek/pcap-samples:/pcaps
+#     command: zeek -r /pcaps/test.pcap
+
+#   splunk:
+#     image: splunk/splunk:latest
+#     environment:
+#       - SPLUNK_START_ARGS=--accept-license
+#       - SPLUNK_PASSWORD=${SPLUNK_PASSWORD}
+#     ports:
+#       - "8000:8000"
+#       - "8089:8089"
+#     volumes:
+#       - splunk-data:/opt/splunk/var
+
+# volumes:
+#   splunk-data:

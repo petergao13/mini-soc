@@ -2,25 +2,32 @@
 # after the zeek -> splunk pipeline is finished. 
 
 
-# version: '3.8'
+version: '3.8'
 
-# services:
-#   zeek:
-#     image: blacktop/zeek
-#     volumes:
-#       - ./zeek/pcap-samples:/pcaps
-#     command: zeek -r /pcaps/test.pcap
+services:
+  zeek:
+    image: zeek/zeek:lts
+    volumes:
+      - ./pcaps:/pcaps:ro
+      - ./logs:/logs
+    working_dir: /logs
+    entrypoint: ["zeek"]
+    command: ["-C", "-r", "/pcaps/sample.pcap"]
+    environment:
+      - TZ=UTC
 
-#   splunk:
-#     image: splunk/splunk:latest
-#     environment:
-#       - SPLUNK_START_ARGS=--accept-license
-#       - SPLUNK_PASSWORD=${SPLUNK_PASSWORD}
-#     ports:
-#       - "8000:8000"
-#       - "8089:8089"
-#     volumes:
-#       - splunk-data:/opt/splunk/var
+  splunk:
+    image: splunk/splunk:9.4.2
+    environment:
+      - SPLUNK_START_ARGS=--accept-license
+      - SPLUNK_PASSWORD=${SPLUNK_PASSWORD}
+      - TZ=UTC
+    ports:
+      - "8000:8000"
+      - "8088:8088"
+    volumes:
+      - splunk-var:/opt/splunk/var
+      - ./logs:/opt/splunk/etc/logs
 
-# volumes:
-#   splunk-data:
+volumes:
+  splunk-var:

@@ -16,6 +16,21 @@ services:
     environment:
       - TZ=UTC
 
+  processor:
+    build: ./processor
+    ports:
+      - "8001:8001"
+    environment:
+      - SPLUNK_HOST=splunk
+      - SPLUNK_PORT=8088
+      - SPLUNK_TOKEN=${SPLUNK_TOKEN}
+      - SPLUNK_INDEX=main
+    volumes:
+      - ./logs:/app/logs:ro
+    depends_on:
+      - splunk
+    restart: unless-stopped
+
   splunk:
     image: splunk/splunk:9.4.2
     environment:

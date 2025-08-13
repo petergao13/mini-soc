@@ -31,6 +31,17 @@ services:
       - splunk
     restart: unless-stopped
 
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+    depends_on:
+      - processor
+      - splunk
+    restart: unless-stopped
+
   splunk:
     image: splunk/splunk:9.4.2
     environment:

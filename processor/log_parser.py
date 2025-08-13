@@ -41,33 +41,51 @@ class ZeekLogParser:
             
         values = line.strip().split('\t')
         
-        # Ensure we have the right number of fields
         if len(values) != len(field_names):
             logger.warning(f"Field count mismatch: {len(values)} vs {len(field_names)}")
             return None
             
-        # Create event dictionary
-        event = {}
+        raw_event: Dict[str, Any] = {}
         for i, field_name in enumerate(field_names):
             value = values[i]
-            
-            # Convert empty fields to None
             if value == "(empty)" or value == "-":
                 value = None
             else:
-                # Try to convert numeric fields
-                try:
-                    if '.' in value:
+                # Keep ts as string if it has a dot; else try numeric
+                if field_name == "ts":
+                    try:
                         value = float(value)
-                    else:
-                        value = int(value)
-                except (ValueError, TypeError):
-                    # Keep as string if conversion fails
-                    pass
-                    
-            event[field_name] = value
-            
-        return event
+                    except ValueError:
+                        pass
+                else:
+                    try:
+                        if '.' in value:
+                            value = float(value)
+                        else:
+                            value = int(value)
+                    except (ValueError, TypeError):
+                        pass
+            raw_event[field_name] = value
+        
+        # Map dotted Zeek fields to processor schema
+        mapped: Dict[str, Any] = {}
+        mapping = {
+            "id.orig_h": "id_orig_h",
+            "id.orig_p": "id_orig_p",
+            "id.resp_h": "id_resp_h",
+            "id.resp_p": "id_resp_p",
+        }
+        for k, v in raw_event.items():
+            if k in mapping:
+                mapped[mapping[k]] = v
+            else:
+                mapped[k.replace('.', '_')] = v
+        
+        # Ensure ts is a string for API compatibility
+        if 'ts' in mapped and mapped['ts'] is not None:
+            mapped['ts'] = str(mapped['ts'])
+        
+        return mapped
     
     def parse_zeek_file(self, file_path: str) -> List[Dict[str, Any]]:
         """Parse a Zeek log file and return list of events"""

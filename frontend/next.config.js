@@ -2,16 +2,29 @@
 const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
-  output: 'standalone',
+  // Remove standalone output to ensure API routes work properly
+  // output: 'standalone',
   async rewrites() {
     return [
       {
         source: '/api/processor/:path*',
         destination: 'http://processor:8001/:path*',
+        has: [
+          {
+            type: 'header',
+            key: 'accept',
+          },
+        ],
       },
       {
         source: '/api/splunk/:path*',
         destination: 'http://splunk:8000/:path*',
+        has: [
+          {
+            type: 'header',
+            key: 'accept',
+          },
+        ],
       },
     ];
   },

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 
 export default function Dashboard() {
   const [systemStatus, setSystemStatus] = useState({
+    zeek: 'unknown',
     processor: 'unknown',
     splunk: 'unknown',
     frontend: 'active'
@@ -13,9 +14,10 @@ export default function Dashboard() {
   useEffect(() => {
     const checkStatus = async () => {
       try {
-        const response = await fetch('/api/processor/health');
-        if (response.ok) {
-          const data = await response.json();
+        // Check processor status
+        const processorResponse = await fetch('/api/processor/health');
+        if (processorResponse.ok) {
+          const data = await processorResponse.json();
           setSystemStatus(prev => ({
             ...prev,
             processor: data.status === 'healthy' ? 'connected' : 'disconnected'
@@ -23,9 +25,41 @@ export default function Dashboard() {
         } else {
           setSystemStatus(prev => ({ ...prev, processor: 'disconnected' }));
         }
+
+        // Check Zeek status
+        const zeekResponse = await fetch('/api/zeek/health');
+        if (zeekResponse.ok) {
+          const zeekData = await zeekResponse.json();
+          setSystemStatus(prev => ({
+            ...prev,
+            zeek: zeekData.status === 'running' ? 'running' : 
+                  zeekData.status === 'stopped' ? 'stopped' : 
+                  zeekData.status === 'starting' ? 'starting' : 'not_running'
+          }));
+        } else {
+          setSystemStatus(prev => ({ ...prev, zeek: 'unknown' }));
+        }
+
+        // Check Splunk status
+        const splunkResponse = await fetch('/api/splunk/health');
+        if (splunkResponse.ok) {
+          const splunkData = await splunkResponse.json();
+          setSystemStatus(prev => ({
+            ...prev,
+            splunk: splunkData.status === 'running' ? 'running' : 
+                  splunkData.status === 'warning' ? 'warning' : 
+                  splunkData.status === 'stopped' ? 'stopped' : 'unknown'
+          }));
+        } else {
+          setSystemStatus(prev => ({ ...prev, splunk: 'unknown' }));
+        }
       } catch (error) {
-        console.log('Processor check failed:', error);
-        setSystemStatus(prev => ({ ...prev, processor: 'disconnected' }));
+        console.log('Health check failed:', error);
+        setSystemStatus(prev => ({ 
+          ...prev, 
+          processor: 'disconnected',
+          zeek: 'unknown'
+        }));
       }
     };
 
@@ -60,7 +94,20 @@ export default function Dashboard() {
           <h2 className="text-3xl font-bold text-gray-900 mb-4">Dashboard Loaded Successfully!</h2>
           <p className="text-lg text-gray-600">The frontend is now working properly.</p>
           
-          <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="bg-white rounded-lg shadow p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Zeek</h3>
+              <p className={`font-medium ${
+                systemStatus.zeek === 'running' ? 'text-green-600' : 
+                systemStatus.zeek === 'stopped' ? 'text-red-600' : 
+                systemStatus.zeek === 'starting' ? 'text-yellow-600' : 'text-gray-600'
+              }`}>
+                {systemStatus.zeek === 'running' ? 'Running' : 
+                 systemStatus.zeek === 'stopped' ? 'Stopped' : 
+                 systemStatus.zeek === 'starting' ? 'Starting' : 
+                 systemStatus.zeek === 'not_running' ? 'Not Running' : 'Checking...'}
+              </p>
+            </div>
             <div className="bg-white rounded-lg shadow p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-2">Processor</h3>
               <p className={`font-medium ${
@@ -73,7 +120,15 @@ export default function Dashboard() {
             </div>
             <div className="bg-white rounded-lg shadow p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-2">Splunk</h3>
-              <p className="text-green-600 font-medium">Running</p>
+              <p className={`font-medium ${
+                systemStatus.splunk === 'running' ? 'text-green-600' : 
+                systemStatus.splunk === 'warning' ? 'text-yellow-600' : 
+                systemStatus.splunk === 'stopped' ? 'text-red-600' : 'text-gray-600'
+              }`}>
+                {systemStatus.splunk === 'running' ? 'Running' : 
+                 systemStatus.splunk === 'warning' ? 'Warning' : 
+                 systemStatus.splunk === 'stopped' ? 'Stopped' : 'Checking...'}
+              </p>
             </div>
             <div className="bg-white rounded-lg shadow p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-2">Frontend</h3>

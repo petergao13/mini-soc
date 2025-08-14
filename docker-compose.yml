@@ -37,6 +37,8 @@ services:
       - "3000:3000"
     environment:
       - NODE_ENV=production
+    volumes:
+      - ./logs:/app/logs:ro
     depends_on:
       - processor
       - splunk

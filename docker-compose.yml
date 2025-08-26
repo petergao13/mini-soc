@@ -5,6 +5,7 @@
 version: '3.8'
 
 services:
+  # Zeek service for PCAP processing (existing)
   zeek:
     image: zeek/zeek:lts
     volumes:
@@ -15,6 +16,29 @@ services:
     command: ["-C", "-r", "/pcaps/sample.pcap"]
     environment:
       - TZ=UTC
+    profiles:
+      - pcap-mode
+
+  # New service for live packet capture
+  zeek-live:
+    image: zeek/zeek:lts
+    volumes:
+      - ./logs:/logs
+      - ./configs:/configs:ro
+    working_dir: /logs
+    entrypoint: ["zeek"]
+    command: ["-C", "-i", "eth0", "-U", ".status"]
+    environment:
+      - TZ=UTC
+      - ZEEK_INTERFACE=wlo1
+      - ZEEK_LOG_DIR=/logs
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    network_mode: host
+    profiles:
+      - live-mode
+    restart: unless-stopped
 
   processor:
     build: ./processor

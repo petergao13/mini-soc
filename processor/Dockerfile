@@ -17,5 +17,8 @@ COPY . .
 # Expose port
 EXPOSE 8001
 
+# Make startup script executable
+RUN chmod +x start.sh
+
 # Run the application
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8001", "--reload"]
+CMD ["./start.sh"]
